@@ -47,12 +47,11 @@ def process_video(video_url, output_format='mp3'):
             'quiet': True,
             'noplaylist': True,
             'ffmpeg_location': FFMPEG_PATH,
-            'source_address': '0.0.0.0', # Force IPv4
-            'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Sec-Fetch-Mode': 'navigate',
+            'source_address': '0.0.0.0', # Keep IPv4 force
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web']
+                }
             }
         }
 
