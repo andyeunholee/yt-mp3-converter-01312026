@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT to MP3 Converter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF3D00;
+            --secondary: #7e22ce;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at top left, #3b0764, #0f172a);
+            overflow: hidden;
+        }
+
+        /* Ambient background blobs */
+        .blob {
+            position: absolute;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+            animation: float 10s infinite alternate;
+        }
+
+        .blob-1 {
+            top: 20%;
+            left: 20%;
+            width: 300px;
+            height: 300px;
+            background: #FF3D00;
+            border-radius: 50%;
+        }
+
+        .blob-2 {
+            bottom: 20%;
+            right: 20%;
+            width: 400px;
+            height: 400px;
+            background: #7e22ce;
+            border-radius: 50%;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(20px, 40px) scale(1.1);
+            }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            perspective: 1000px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 1.25rem 1.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 61, 0, 0.1);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        input[type="text"]::placeholder {
+            color: #64748b;
+        }
+
+        button {
+            width: 100%;
+            padding: 1.25rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), #d93d04);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(255, 61, 0, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result {
+            margin-top: 1rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            text-decoration: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* SVG Icons */
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="container">
+        <div class="card">
+            <h1>YT to MP3</h1>
+            <p class="subtitle">Convert audio instantly. Private & High Quality.</p>
+
+            <div class="input-group">
+                <input type="text" id="urlInput" placeholder="Paste YouTube link here..." autocomplete="off">
+            </div>
+
+            <div class="button-group">
+                <button id="mp4Btn" onclick="convertVideo('mp4')" class="action-btn">
+                    <span>Convert to MP4</span>
+                    <div class="loader"></div>
+                </button>
+                <button id="mp3Btn" onclick="convertVideo('mp3')" class="action-btn">
+                    <span>Convert to MP3</span>
+                    <div class="loader"></div>
+                </button>
+            </div>
+
+            <div class="error-msg" id="errorMsg"></div>
+
+            <div class="status">
+                <div class="result" id="resultArea">
+                    <p style="margin-bottom: 10px; color: #cbd5e1; font-size: 0.9rem;">Ready for download</p>
+                    <a href="#" id="downloadLink" class="download-btn">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path
+                                d="M12 16L7 11H10V4H14V11H17L12 16ZM12 18C16.97 18 21 18 21 18V20H3V18C3 18 7.03 18 12 18Z" />
+                        </svg>
+                        <span id="downloadText">Download</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Add new styles for button group */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 1.25rem;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #mp4Btn {
+            background: linear-gradient(135deg, #3b82f6, #0ea5e9);
+        }
+
+        #mp3Btn {
+            background: linear-gradient(135deg, var(--primary), #d93d04);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-btn .loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <script>
+        async function convertVideo(format) {
+            const urlInput = document.getElementById('urlInput');
+            const mp4Btn = document.getElementById('mp4Btn');
+            const mp3Btn = document.getElementById('mp3Btn');
+            const resultArea = document.getElementById('resultArea');
+            const downloadLink = document.getElementById('downloadLink');
+            const downloadText = document.getElementById('downloadText');
+            const errorMsg = document.getElementById('errorMsg');
+
+            const url = urlInput.value.trim();
+            if (!url) return;
+
+            // Reset UI
+            errorMsg.style.display = 'none';
+            resultArea.style.display = 'none';
+
+            // Disable buttons and show loader on clicked button
+            mp4Btn.disabled = true;
+            mp3Btn.disabled = true;
+
+            const activeBtn = format === 'mp4' ? mp4Btn : mp3Btn;
+            const btnText = activeBtn.querySelector('span');
+            const loader = activeBtn.querySelector('.loader');
+
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch('/convert', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url, format: format })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    downloadLink.href = `/download/${data.filename}`;
+                    downloadText.textContent = `Download ${format.toUpperCase()}`;
+                    resultArea.style.display = 'block';
+                } else {
+                    errorMsg.textContent = data.error || 'Conversion failed.';
+                    errorMsg.style.display = 'block';
+                }
+
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = 'Network error occurred.';
+                errorMsg.style.display = 'block';
+            } finally {
+                mp4Btn.disabled = false;
+                mp3Btn.disabled = false;
+                btnText.style.display = 'inline';
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

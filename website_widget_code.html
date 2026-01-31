@@ -1,0 +1,146 @@
+<!-- 
+    ★ 웹사이트 통합 가이드 ★
+    
+    이 코드를 사용자의 웹사이트 HTML의 원하는 위치에 붙여넣으세요.
+    단, 이 기능이 작동하려면 파이썬 서버(app.py)가 실행 중이어야 하며, 
+    인터넷에서 접근 가능한 주소(API_URL)가 필요합니다.
+-->
+
+<!-- 1. 스타일 (CSS) -->
+<style>
+    .yt-widget {
+        font-family: 'Outfit', sans-serif;
+        background: rgba(15, 23, 42, 0.9);
+        color: white;
+        padding: 20px;
+        border-radius: 16px;
+        max-width: 400px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .yt-widget h3 {
+        margin: 0 0 15px 0;
+        font-size: 1.2rem;
+        color: #fff;
+    }
+
+    .yt-widget input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: white;
+        box-sizing: border-box;
+    }
+
+    .yt-widget .btn-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .yt-widget button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+        color: white;
+    }
+
+    .btn-mp4 {
+        background: #3b82f6;
+    }
+
+    .btn-mp3 {
+        background: #FF3D00;
+    }
+
+    .btn-mp4:hover {
+        background: #2563eb;
+    }
+
+    .btn-mp3:hover {
+        background: #d93400;
+    }
+
+    .yt-widget button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .yt-status {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        text-align: center;
+        min-height: 20px;
+    }
+
+    .yt-download-link {
+        display: inline-block;
+        margin-top: 10px;
+        color: #4ade80;
+        text-decoration: none;
+        font-weight: bold;
+    }
+</style>
+
+<!-- 2. 위젯 HTML -->
+<div class="yt-widget">
+    <h3>🎵 YouTube Converter</h3>
+    <input type="text" id="ytUrl" placeholder="Paste YouTube link here...">
+
+    <div class="btn-group">
+        <button class="btn-mp4" onclick="requestConvert('mp4')">MP4 Video</button>
+        <button class="btn-mp3" onclick="requestConvert('mp3')">MP3 Audio</button>
+    </div>
+
+    <div class="yt-status" id="ytStatus"></div>
+</div>
+
+<!-- 3. 스크립트 (JS) -->
+<script>
+    // ★ 중요: 실제 서버 주소로 변경해야 합니다. 
+    // 예: 'https://your-server-name.com' or 'http://localhost:5000' (테스트용)
+    const API_BASE_URL = 'http://localhost:5000';
+
+    async function requestConvert(format) {
+        const url = document.getElementById('ytUrl').value;
+        const status = document.getElementById('ytStatus');
+
+        if (!url) {
+            status.textContent = "Please enter a URL";
+            status.style.color = "#ef4444";
+            return;
+        }
+
+        status.innerHTML = `<span style="color:#cbd5e1">Converting to ${format.toUpperCase()}... please wait...</span>`;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/convert`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url, format: format })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // 다운로드 링크 생성
+                const downloadUrl = `${API_BASE_URL}/download/${data.filename}`;
+                status.innerHTML = `<a href="${downloadUrl}" class="yt-download-link" target="_blank">Download ${format.toUpperCase()} Ready! (Click here)</a>`;
+            } else {
+                status.textContent = "Error: " + (data.error || "Failed");
+                status.style.color = "#ef4444";
+            }
+        } catch (e) {
+            console.error(e);
+            status.textContent = "Server Error. Is the app running?";
+            status.style.color = "#ef4444";
+        }
+    }
+</script>
